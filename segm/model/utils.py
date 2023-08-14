@@ -1,3 +1,5 @@
+import sys
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -156,6 +158,7 @@ def inference(
     window_size,
     window_stride,
     batch_size,
+    onnx_flag  = 0
 ):
     C = model.n_cls
     seg_map = torch.zeros((C, ori_shape[0], ori_shape[1]), device=ptu.device)
@@ -170,6 +173,18 @@ def inference(
         seg_maps = torch.zeros((B, C, window_size, window_size), device=im.device)
         with torch.no_grad():
             for i in range(0, B, WB):
+                if onnx_flag:
+                    torch.onnx.export(model,
+                    	crops[i : i + WB],
+                    	"segmenter_small_512_512_bdynamic_280423_9class.onnx",
+                    	opset_version=11,
+                    	input_names=["INPUTS"],
+                    	output_names=["OUTPUTS"],
+                    	dynamic_axes = {'INPUTS':{0:'batch'},'OUTPUTS':{0:'batch'}} #for dynamic batching
+                    	)
+                    print("Onnx created successfully")
+                    sys.exit(1)
+
                 seg_maps[i : i + WB] = model.forward(crops[i : i + WB])
         windows["seg_maps"] = seg_maps
         im_seg_map = merge_windows(windows, window_size, ori_shape)
