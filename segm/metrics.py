@@ -43,7 +43,7 @@ https://github.com/open-mmlab/mmsegmentation/blob/master/mmseg/apis/test.py#L160
 """
 
 
-def gather_data(seg_pred, tmp_dir=None):
+def gather_data(seg_pred, tmp_dir):
     """
     distributed data gathering
     prediction and ground truth are stored in a common tmp directory

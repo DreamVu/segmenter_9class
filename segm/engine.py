@@ -36,7 +36,7 @@ def train_one_epoch(
         loss_value = loss.item()
         if not math.isfinite(loss_value):
             print("Loss is {}, stopping training".format(loss_value), force=True)
-
+        
         optimizer.zero_grad()
         if loss_scaler is not None:
             loss_scaler(
@@ -52,11 +52,15 @@ def train_one_epoch(
         lr_scheduler.step_update(num_updates=num_updates)
 
         torch.cuda.synchronize()
-
-        logger.update(
-            loss=loss.item(),
-            learning_rate=optimizer.param_groups[0]["lr"],
-        )
+        if not math.isfinite(loss_value):
+        	logger.update(
+        	loss=0.0000000000000000000001,
+        	learning_rate=optimizer.param_groups[0]["lr"],)
+        else:
+        	logger.update(
+            	loss=loss.item(),
+            	learning_rate=optimizer.param_groups[0]["lr"],
+        	)
 
     return logger
 
@@ -100,8 +104,9 @@ def evaluate(
 
         seg_pred = seg_pred.cpu().numpy()
         val_seg_pred[filename] = seg_pred
-
-    val_seg_pred = gather_data(val_seg_pred)
+    
+    results_path = "./"
+    val_seg_pred = gather_data(val_seg_pred,results_path)
     scores = compute_metrics(
         val_seg_pred,
         val_seg_gt,
