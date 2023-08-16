@@ -5,6 +5,9 @@ from PIL import Image
 import numpy as np
 import torchvision.transforms.functional as F
 
+import torchvision
+import torch
+
 import segm.utils.torch as ptu
 
 from segm.data.utils import STATS
@@ -38,6 +41,7 @@ def main(model_path, input_dir, output_dir, gpu):
     list_dir = list(input_dir.iterdir())
     for filename in tqdm(list_dir, ncols=80):
         pil_im = Image.open(filename).copy()
+        pil_im = pil_im.resize((1489,512))
         im = F.pil_to_tensor(pil_im).float() / 255
         im = F.normalize(im, normalization["mean"], normalization["std"])
         im = im.to(ptu.device).unsqueeze(0)

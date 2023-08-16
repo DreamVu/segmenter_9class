@@ -8,6 +8,7 @@ import pickle as pkl
 from pathlib import Path
 import tempfile
 import shutil
+import cv2
 from mmseg.core import mean_iou
 
 """
@@ -97,7 +98,11 @@ def compute_metrics(
         keys = sorted(seg_pred.keys())
         for k in keys:
             list_seg_pred.append(np.asarray(seg_pred[k]))
-            list_seg_gt.append(np.asarray(seg_gt[k]))
+            seg_gt_frame = np.asarray(seg_gt[k])
+            if seg_gt_frame.shape == (1819,5290):
+            	seg_gt_frame = cv2.resize(seg_gt_frame, (1489, 512), interpolation=cv2.INTER_NEAREST)
+            	
+            list_seg_gt.append(seg_gt_frame)
         ret_metrics = mean_iou(
             results=list_seg_pred,
             gt_seg_maps=list_seg_gt,

@@ -6,6 +6,7 @@ from segm.metrics import gather_data, compute_metrics
 from segm.model import utils
 from segm.data.utils import IGNORE_LABEL
 import segm.utils.torch as ptu
+import cv2
 
 
 def train_one_epoch(
@@ -103,8 +104,9 @@ def evaluate(
             seg_pred = seg_pred.argmax(0)
 
         seg_pred = seg_pred.cpu().numpy()
+        if seg_pred.shape == (1819,5290):
+            seg_pred = cv2.resize(seg_pred, (1489, 512), interpolation=cv2.INTER_NEAREST)
         val_seg_pred[filename] = seg_pred
-    
     results_path = "./"
     val_seg_pred = gather_data(val_seg_pred,results_path)
     scores = compute_metrics(
@@ -114,7 +116,7 @@ def evaluate(
         ignore_index=IGNORE_LABEL,
         distributed=ptu.distributed,
     )
-
+    
     for k, v in scores.items():
         logger.update(**{f"{k}": v, "n": 1})
 
